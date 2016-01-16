@@ -6,17 +6,18 @@
 
 BAK=/root/backup
 LOG=${BAK}/bak.log
-if [ -s "/backup/`date +%Y%m%d`.tar.bz2" -a -s "/backup/`date +%Y%m%d`.sql.bz2" ]; then exit; fi
-tar -jcvpf ${BAK}/`date +%Y%m%d`.tar.bz2 /html/kashu.org/ &> /dev/null
-test -s ${BAK}/`date +%Y%m%d`.tar.bz2 || { echo "Error:`date +%Y%m%d`.tar.bz2" >> ${BAK}/bak.log && exit 1; }
+DATE=`date +%Y%m%d`
+if [ -s "/backup/${DATE}.tar.bz2" -a -s "/backup/${DATE}.sql.bz2" ]; then exit; fi
+tar -jcvpf ${BAK}/${DATE}.tar.bz2 /html/kashu.org/ &> /dev/null
+test -s ${BAK}/${DATE}.tar.bz2 || { echo "Error:${DATE}.tar.bz2" >> ${LOG} && exit 1; }
 
-mysqldump -uroot -ppassword DB_name > ${BAK}/`date +%Y%m%d`.sql
-test -s ${BAK}/`date +%Y%m%d`.sql || { echo "Error:`date +%Y%m%d`.sql" >> ${BAK}/bak.log && exit 2; }
-bzip2 -9 ${BAK}/`date +%Y%m%d`.sql
+mysqldump -uusername -ppassword DB_name > ${BAK}/${DATE}.sql
+test -s ${BAK}/${DATE}.sql || { echo "Error:${DATE}.sql" >> ${LOG} && exit 2; }
+bzip2 -9 ${BAK}/${DATE}.sql
 
-/root/shell/dropbox_uploader.sh upload ${BAK}/`date +%Y%m%d`*.bz2 /kashu.org
+/root/shell/dropbox_uploader.sh upload ${BAK}/${DATE}*.bz2 /kashu.org
 if [ "$?" == 0 ]; then
-	echo "`date +%Y%m%d`:OK" >> ${LOG}
+	echo "${DATE}:OK" >> ${LOG}
 else
-	echo "`date +%Y%m%d`:Error" >> ${LOG}
+	echo "${DATE}:Error" >> ${LOG}
 fi
